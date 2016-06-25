@@ -1,0 +1,107 @@
+---
+
+- name: verify python-mysqldb installed
+  apt:
+    name: python-mysqldb
+    state: installed
+
+- name: create mysql user
+  mysql_user:
+    name: "{{ gcoop_mysqldump_mysql_username }}"
+    host: 'localhost'
+    password: "{{ gcoop_mysqldump_mysql_password }}"
+    priv: '*.*:FILE,LOCK TABLES,PROCESS,RELOAD,SELECT,SHOW VIEW,SUPER'
+    login_user: "{{ gcoop_mysqldump_mysql_root_username }}"
+    login_password: "{{ gcoop_mysqldump_mysql_root_password }}"
+    state: present
+  when: gcoop_mysqldump_create_mysql_user
+
+- name: create system user
+  user:
+    name: "{{ gcoop_mysqldump_system_username }}"
+    home: /home/{{ gcoop_mysqldump_system_username }}
+    comment: MySQL Backup
+    shell: /bin/bash
+    state: present
+    password: "{{ gcoop_mysqldump_system_password }}"
+    groups: users
+    append: yes
+  when: gcoop_mysqldump_create_system_user
+
+- name: create .my.cnf
+  template:
+    src: templates/my.cnf.j2
+    dest: /home/{{ gcoop_mysqldump_system_username }}/.my.cnf
+    owner: "{{ gcoop_mysqldump_system_username }}"
+    group: root
+    mode: 0640
+
+- name: copy script mysqldump.sh
+  template:
+    src: templates/mysqldump.sh.j2
+    dest: "{{ gcoop_mysqldump_bin }}"
+    owner: "{{ gcoop_mysqldump_system_username }}"
+    group: root
+    mode: 0550
+
+- name: create backup directory
+  file:
+    path:  "{{ gcoop_mysqldump_dir }}"
+    owner: "{{ gcoop_mysqldump_system_username }}"
+    group: "{{ gcoop_mysqldump_group }}"
+    mode:  "{{ gcoop_mysqldump_permission }}"
+    recurse: yes
+    state: directory
+
+- name: create cronjob
+  cron:
+    minute: "{{ item.minute }}"
+    hour: "{{ item.hour }}"
+    day: "{{ item.day }}"
+    name: "Backup {{ item.name }} {{ item.database }}"
+    cron_file: "{{ gcoop_mysqldump_cron_file }}"
+    user: "{{ gcoop_mysqldump_cron_username }}"
+    job: "{{ gcoop_mysqldump_bin }} {{ item.database }} '{{ item.format }}'"
+  with_items:
+    - "{{ gcoop_mysqldump_cron_entries }}"
+  notify: cron restart
+
+- name: setting SHELL in cron file
+  cronvar:
+    name: "SHELL"
+    value: "{{ gcoop_mysqldump_shell }}"
+    user: "{{ gcoop_mysqldump_cron_username }}"
+    cron_file: "{{ gcoop_mysqldump_cron_file }}"
+  notify: cron restart
+
+- name: setting LANG in cron file
+  cronvar:
+    name: "LANG"
+    value: "{{ gcoop_mysqldump_cron_lang }}"
+    user: "{{ gcoop_mysqldump_cron_username }}"
+    cron_file: "{{ gcoop_mysqldump_cron_file }}"
+  notify: cron restart
+
+- name: setting LANGUAGE in cron file
+  cronvar:
+    name: "LANGUAGE"
+    value: "{{ gcoop_mysqldump_cron_lang }}"
+    user: "{{ gcoop_mysqldump_cron_username }}"
+    cron_file: "{{ gcoop_mysqldump_cron_file }}"
+  notify: cron restart
+
+- name: setting LC_CTYPE in cron file
+  cronvar:
+    name: "LC_CTYPE"
+    value: "{{ gcoop_mysqldump_cron_lang }}"
+    user: "{{ gcoop_mysqldump_cron_username }}"
+    cron_file: "{{ gcoop_mysqldump_cron_file }}"
+  notify: cron restart
+
+- name: escape % in cron file
+  replace:
+    dest: "/etc/cron.d/{{ gcoop_mysqldump_cron_file }}"
+    regexp: '%'
+    replace: '\%'
+  notify: cron restart
+
