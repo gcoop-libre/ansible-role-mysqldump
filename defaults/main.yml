@@ -1,0 +1,73 @@
+---
+
+gcoop_mysqldump_create_mysql_user: no
+gcoop_mysqldump_create_system_user: no
+
+gcoop_mysqldump_system_username: mysqlbackup
+gcoop_mysqldump_system_password: ReplaceThisPasswordWithRandomString
+
+gcoop_mysqldump_mysql_username: mysqlbackup
+gcoop_mysqldump_mysql_password: ReplaceThisPasswordWithRandomString
+
+gcoop_mysqldump_mysql_root_password: root
+gcoop_mysqldump_mysql_root_username: root
+
+gcoop_mysqldump_host: localhost
+
+gcoop_mysqldump_dir: /backup/sql
+gcoop_mysqldump_bin: "/home/{{ gcoop_mysqldump_system_username }}/mysqldump.sh"
+gcoop_mysqldump_owner: "{{ gcoop_mysqldump_system_username }}"
+gcoop_mysqldump_group: root
+gcoop_mysqldump_permission: '0700'
+gcoop_mysqldump_umask: '0127'
+gcoop_mysqldump_default_date_format: '%Y-%m'
+gcoop_mysqldump_gzip_options: '-9 -c'
+gcoop_mysqldump_gzip_extension: sql.gz
+
+gcoop_mysqldump_cat: /bin/cat
+gcoop_mysqldump_date: /bin/date
+gcoop_mysqldump_dump: /usr/bin/mysqldump
+gcoop_mysqldump_expr: /usr/bin/expr
+gcoop_mysqldump_gzip: /bin/gzip
+gcoop_mysqldump_logger: /usr/bin/logger
+gcoop_mysqldump_md5: /usr/bin/md5sum
+gcoop_mysqldump_mysql: /usr/bin/mysql
+gcoop_mysqldump_rm: /bin/rm
+gcoop_mysqldump_sed: /bin/sed
+gcoop_mysqldump_shell: /bin/bash
+gcoop_mysqldump_tr: /usr/bin/tr
+
+gcoop_mysqldump_error_log: "{{ gcoop_mysqldump_dir }}/{{ ansible_hostname }}-error.log"
+gcoop_mysqldump_log: "{{ gcoop_mysqldump_dir }}/{{ ansible_hostname }}.log"
+
+gcoop_mysqldump_database: all_databases
+
+gcoop_mysqldump_cron_lang: es_AR.UTF-8
+gcoop_mysqldump_cron_language: es_AR.UTF-8
+gcoop_mysqldump_cron_username: "{{ gcoop_mysqldump_system_username }}"
+
+gcoop_mysqldump_cron_file: mysqldump
+
+gcoop_mysqldump_cron_entries:
+
+  - name: monthly
+    minute: 0
+    hour: 2
+    day: '*/7'
+    format: '%b'
+    database: "{{ gcoop_mysqldump_database }}"
+
+  - name: daily
+    minute: 0
+    hour: 1
+    day: '*'
+    format: '%a'
+    database: "{{ gcoop_mysqldump_database }}"
+
+  - name: hourly
+    minute: 30
+    hour: '*'
+    day: '*'
+    format: ''
+    database: 'mysql'
+

@@ -1,0 +1,15 @@
+---
+
+- hosts: localhost
+  become: yes
+  remote_user: debian
+
+  roles:
+    - role: gcoop.mysqldump
+      gcoop_mysqldump_create_mysql_user: yes
+      gcoop_mysqldump_create_system_user: yes
+      gcoop_mysqldump_mysql_username: mysqlbackup
+      gcoop_mysqldump_mysql_password:      "{{ lookup( 'pass', 'mysql/' + gcoop_mysqldump_mysql_username ) }}"
+      gcoop_mysqldump_mysql_root_password: "{{ lookup( 'pass', 'mysql/root' ) }}"
+      gcoop_mysqldump_system_password:     "{{ lookup( 'pass', 'users/' + gcoop_mysqldump_mysql_username ) }}"
+

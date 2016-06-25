@@ -1,0 +1,121 @@
+#!/bin/bash
+#
+# This script comes with ABSOLUTELY NO WARRANTY, use at own risk
+# Copyright (C) 2016 Osiris Alejandro Gomez <osiris@gcoop.coop>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# {{ ansible_managed }}
+
+umask {{ gcoop_mysqldump_umask }}
+
+HOSTNAME='{{ ansible_hostname }}'
+
+USER='{{ gcoop_mysqldump_system_username }}'
+BIN='{{ gcoop_mysqldump_bin }}'
+DIR='{{ gcoop_mysqldump_dir }}'
+TMP="/tmp/mysqldump.$$.log"
+
+MYSQL='{{ gcoop_mysqldump_mysql }}'
+DUMP='{{ gcoop_mysqldump_dump }}'
+GZIP='{{ gcoop_mysqldump_gzip }}'
+GZIP_OPT='{{ gcoop_mysqldump_gzip_options }}'
+GZIP_EXT='{{ gcoop_mysqldump_gzip_extension }}'
+MD5='{{ gcoop_mysqldump_md5 }}'
+DATE='{{ gcoop_mysqldump_date }}'
+LOGGER='{{ gcoop_mysqldump_logger }}'
+SED='{{ gcoop_mysqldump_sed }}'
+TR='{{ gcoop_mysqldump_tr }}'
+CAT='{{ gcoop_mysqldump_cat }}'
+RM='{{ gcoop_mysqldump_rm }}'
+EXPR='{{ gcoop_mysqldump_expr }}'
+
+OPTIONS=$($CAT << EOF
+ --add-drop-database
+ --add-drop-table
+ --create-options
+ --default-character-set=utf8
+ --extended-insert
+ --single-transaction
+ --skip-events
+ --skip-dump-date
+ -h {{ gcoop_mysqldump_host }}
+EOF
+)
+
+log_error ()
+{
+  $LOGGER -p local0.error -t mysqldump "$1"
+}
+
+log_info ()
+{
+  $LOGGER -p local0.info -t mysqldump "$1"
+}
+
+if [ "$1" = "all_databases" ]
+then
+  DATABASES=$(echo "SHOW DATABASES;" | $MYSQL --batch -u $USER -N)
+else
+  DATABASES="$1"
+fi
+
+if [ -z "$2" ]
+then
+  DATE_FORMAT=''
+else
+  DATE_FORMAT="$2"
+fi
+
+if [ -z "$DATABASES" ]
+then
+  log_error "ERROR: empty DATABASES"
+  exit 1
+fi
+
+to_date ()
+{
+  $DATE -d @"$1" "+%F %R"
+}
+
+to_hhmmss ()
+{
+  $DATE -d "1970-01-01 $1 seconds" +%H:%M:%S
+}
+
+echo "$DATABASES" | $TR ' ' "\n" | while read DB
+do
+  if [ -z "$DATE_FORMAT" ]
+  then
+    FILE="${DIR}/${HOSTNAME}-${DB}.${GZIP_EXT}"
+  else
+    T=$($DATE +$DATE_FORMAT | $TR A-Z a-z)
+    TIMESTAMP=$(echo $T | $SED s/á/a/g | $SED s/é/e/g)
+    FILE="${DIR}/${HOSTNAME}-${DB}-${TIMESTAMP}.${GZIP_EXT}"
+  fi
+
+  START=$($DATE +%s)
+  OPT=$(echo "$OPTIONS" | $TR "\n" " ")
+  $DUMP -u $USER $OPT $DB | $GZIP $GZIP_OPT >"$FILE" 2>"$TMP"
+  [[ -s "$TMP" ]] && log_error $($CAT "$TMP" | $TR "\n" " ")
+  [[ -e "$TMP" ]] && $RM -f "$TMP"
+  END=$($DATE +%s)
+  TOTAL=$($EXPR "$END" - "$START")
+  SS=$(to_date "$START")
+  SE=$(to_date "$END")
+  ST=$(to_hhmmss "$TOTAL")
+  MD5_FILE=$("$MD5" "$FILE")
+  log_info "Start: $SS End: $SE Duration: $ST File: $MD5_FILE"
+done
+
