@@ -48,7 +48,8 @@ OPTIONS=$($CAT << EOF
  --default-character-set=utf8
  --extended-insert
  --single-transaction
- --skip-events
+ --events
+ --ignore-table=mysql.event
  --skip-dump-date
  -h {{ gcoop_mysqldump_host }}
 EOF
