@@ -64,7 +64,7 @@
     job: "{{ gcoop_mysqldump_bin }} {{ item.database }} '{{ item.format }}'"
   with_items:
     - "{{ gcoop_mysqldump_cron_entries }}"
-  notify: cron restart
+  notify: restart cron
 
 - name: setting SHELL in cron file
   cronvar:
@@ -72,7 +72,7 @@
     value: "{{ gcoop_mysqldump_shell }}"
     user: "{{ gcoop_mysqldump_cron_username }}"
     cron_file: "{{ gcoop_mysqldump_cron_file }}"
-  notify: cron restart
+  notify: restart cron
 
 - name: setting LANG in cron file
   cronvar:
@@ -80,7 +80,7 @@
     value: "{{ gcoop_mysqldump_cron_lang }}"
     user: "{{ gcoop_mysqldump_cron_username }}"
     cron_file: "{{ gcoop_mysqldump_cron_file }}"
-  notify: cron restart
+  notify: restart cron
 
 - name: setting LANGUAGE in cron file
   cronvar:
@@ -88,7 +88,7 @@
     value: "{{ gcoop_mysqldump_cron_lang }}"
     user: "{{ gcoop_mysqldump_cron_username }}"
     cron_file: "{{ gcoop_mysqldump_cron_file }}"
-  notify: cron restart
+  notify: restart cron
 
 - name: setting LC_CTYPE in cron file
   cronvar:
@@ -96,12 +96,12 @@
     value: "{{ gcoop_mysqldump_cron_lang }}"
     user: "{{ gcoop_mysqldump_cron_username }}"
     cron_file: "{{ gcoop_mysqldump_cron_file }}"
-  notify: cron restart
+  notify: restart cron
 
 - name: escape % in cron file
   replace:
     dest: "/etc/cron.d/{{ gcoop_mysqldump_cron_file }}"
     regexp: '%'
     replace: '\%'
-  notify: cron restart
+  notify: restart cron
 
