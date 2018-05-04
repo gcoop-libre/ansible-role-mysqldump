@@ -1,4 +1,4 @@
-# Ansible Role: gcoop.mysqldump
+# Ansible Role: gcoop-libre.mysqldump
 
 This role, configure access to MySQL/MariaDB/Percona in localhost and cronfile for backup using `mysqldump` command.
 
@@ -108,7 +108,7 @@ If you want to create a new system and mysql user using lookup pass plugin:
       remote_user: debian
 
       roles:
-        - role: gcoop.mysqldump
+        - role: gcoop-libre.mysqldump
           gcoop_mysqldump_create_mysql_user: yes
           gcoop_mysqldump_create_system_user: yes
           gcoop_mysqldump_mysql_username: mysqlbackup
@@ -125,7 +125,7 @@ When you already have a system and mysql user:
       remote_user: debian
 
       roles:
-        - role: gcoop.mysqldump
+        - role: gcoop-libre.mysqldump
           gcoop_mysqldump_mysql_username: mark
           gcoop_mysqldump_mysql_password: dadada
           gcoop_mysqldump_mysql_root_password: 123456
