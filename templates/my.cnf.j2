@@ -1,12 +1,11 @@
 # {{ ansible_managed }}
 
 [mysqldump]
-user={{ gcoop_mysqldump_mysql_username }}
-password={{ gcoop_mysqldump_mysql_password }}
+user={{ gcoop_mysqldump_mysql_username | quote }}
+password={{ gcoop_mysqldump_mysql_password | quote }}
 default-character-set=utf8
 
 [client]
-user={{ gcoop_mysqldump_mysql_username }}
-password={{ gcoop_mysqldump_mysql_password }}
+user={{ gcoop_mysqldump_mysql_username | quote }}
+password={{ gcoop_mysqldump_mysql_password | quote }}
 default-character-set=utf8
-
