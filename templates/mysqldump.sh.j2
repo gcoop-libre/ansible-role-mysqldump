@@ -108,7 +108,7 @@ do
 
   START=$($DATE +%s)
   OPT=$(echo "$OPTIONS" | $TR "\n" " ")
-  $DUMP -u $USER $OPT $DB | $GZIP $GZIP_OPT >"$FILE" 2>"$TMP"
+  $DUMP $OPT $DB | $GZIP $GZIP_OPT >"$FILE" 2>"$TMP"
   [[ -s "$TMP" ]] && log_error $($CAT "$TMP" | $TR "\n" " ")
   [[ -e "$TMP" ]] && $RM -f "$TMP"
   END=$($DATE +%s)
