@@ -18,14 +18,12 @@
 #
 # {{ ansible_managed }}
 
-umask {{ gcoop_mysqldump_umask }}
+umask '{{ gcoop_mysqldump_umask }}'
 
 HOSTNAME='{{ ansible_hostname }}'
 
-USER='{{ gcoop_mysqldump_system_username }}'
-BIN='{{ gcoop_mysqldump_bin }}'
 DIR='{{ gcoop_mysqldump_dir }}'
-TMP="/tmp/mysqldump.$$.log"
+TMP=$(mktemp '/tmp/mysqldump.XXXXXXXX.log')
 
 MYSQL='{{ gcoop_mysqldump_mysql }}'
 DUMP='{{ gcoop_mysqldump_dump }}'
@@ -65,21 +63,21 @@ log_info ()
   $LOGGER -p local0.info -t mysqldump "$1"
 }
 
-if [ "$1" = "all_databases" ]
+if [[ "$1" = "all_databases" ]]
 then
-  DATABASES=$(echo "SHOW DATABASES;" | $MYSQL --batch -u $USER -N)
+  DATABASES=$(echo "SHOW DATABASES;" | $MYSQL --batch -N)
 else
   DATABASES="$1"
 fi
 
-if [ -z "$2" ]
+if [[ -z "$2" ]]
 then
   DATE_FORMAT=''
 else
   DATE_FORMAT="$2"
 fi
 
-if [ -z "$DATABASES" ]
+if [[ -z "$DATABASES" ]]
 then
   log_error "ERROR: empty DATABASES"
   exit 1
@@ -95,21 +93,21 @@ to_hhmmss ()
   $DATE -d "1970-01-01 $1 seconds" +%H:%M:%S
 }
 
-echo "$DATABASES" | $TR ' ' "\n" | while read DB
+echo "$DATABASES" | $TR ' ' "\n" | while read -r DB
 do
-  if [ -z "$DATE_FORMAT" ]
+  if [[ -z "$DATE_FORMAT" ]]
   then
     FILE="${DIR}/${HOSTNAME}-${DB}.${GZIP_EXT}"
   else
-    T=$($DATE +$DATE_FORMAT | $TR A-Z a-z)
-    TIMESTAMP=$(echo $T | $SED s/á/a/g | $SED s/é/e/g)
+    T=$($DATE "+$DATE_FORMAT" | $TR A-Z a-z)
+    TIMESTAMP=$(echo "$T" | $SED s/á/a/g | $SED s/é/e/g)
     FILE="${DIR}/${HOSTNAME}-${DB}-${TIMESTAMP}.${GZIP_EXT}"
   fi
 
   START=$($DATE +%s)
   OPT=$(echo "$OPTIONS" | $TR "\n" " ")
   $DUMP $OPT $DB | $GZIP $GZIP_OPT >"$FILE" 2>"$TMP"
-  [[ -s "$TMP" ]] && log_error $($CAT "$TMP" | $TR "\n" " ")
+  [[ -s "$TMP" ]] && log_error "$($CAT "$TMP" | $TR "\n" " ")"
   [[ -e "$TMP" ]] && $RM -f "$TMP"
   END=$($DATE +%s)
   TOTAL=$($EXPR "$END" - "$START")
