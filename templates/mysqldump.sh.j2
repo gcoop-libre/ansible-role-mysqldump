@@ -22,7 +22,6 @@ umask {{ gcoop_mysqldump_umask }}
 
 HOSTNAME='{{ ansible_hostname }}'
 
-USER='{{ gcoop_mysqldump_system_username }}'
 BIN='{{ gcoop_mysqldump_bin }}'
 DIR='{{ gcoop_mysqldump_dir }}'
 TMP="/tmp/mysqldump.$$.log"
@@ -67,7 +66,7 @@ log_info ()
 
 if [ "$1" = "all_databases" ]
 then
-  DATABASES=$(echo "SHOW DATABASES;" | $MYSQL --batch -u $USER -N)
+  DATABASES=$(echo "SHOW DATABASES;" | $MYSQL --batch -N)
 else
   DATABASES="$1"
 fi
