@@ -3,7 +3,7 @@
 - name: verify python-mysqldb installed
   apt:
     name: python-mysqldb
-    state: installed
+    state: present
 
 - name: create mysql user
   mysql_user:
